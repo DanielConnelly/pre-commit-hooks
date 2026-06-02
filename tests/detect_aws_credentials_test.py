@@ -73,7 +73,11 @@ def test_get_aws_secrets_from_env(env_vars, values):
     (
             (
                     'aws_temp_secrets_file.json',
-                    {"tempAccessKeyId", "tempSecretAccessKey", "tempSessionToken"},
+                    {
+                        "tempAccessKeyId",
+                        "tempSecretAccessKey",
+                        "tempSessionToken"
+                    },
             ),
             ('nonsense.txt', set()),
             ('ok_json.json', set()),

@@ -49,7 +49,14 @@ def get_aws_secrets_from_json_file(json_credentials_file: str) -> set[str]:
             return set()
 
     keys = set()
-    for var in ('AccessKeyId', 'SecretAccessKey', 'SessionToken', 'aws_secret_access_key', 'aws_security_token', 'aws_session_token'):
+    for var in (
+            'AccessKeyId',
+            'SecretAccessKey',
+            'SessionToken',
+            'aws_secret_access_key',
+            'aws_security_token',
+            'aws_session_token'
+    ):
         if var in data.get('Credentials', {}):
             keys.add(data['Credentials'][var])
     return keys
@@ -125,8 +132,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
-        '--json-credentials-file',
-        dest='json_credential_file_locations',
+        '--json-credentials-dir',
+        dest='json_credential_dir',
         action='append',
         default=['~/.aws/cli/cache/', '~/.aws/login/cache/'],
         help=(
@@ -143,13 +150,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     credential_files = set(args.credentials_file)
-    json_credential_file_locations = set(args.json_credential_file_locations)
+    json_credential_dirs = set(args.json_credential_dir)
     json_credential_files = set()
-    for json_credential_file_location in json_credential_file_locations:
-        if os.path.isdir(os.path.expanduser(json_credential_file_location)):
-            for filename in os.listdir(os.path.expanduser(json_credential_file_location)):
-                if filename.endswith('.json'):
-                    json_credential_files.add(os.path.join(json_credential_file_location, filename))
+    for json_credential_dir in json_credential_dirs:
+        if os.path.isdir(os.path.expanduser(json_credential_dir)):
+            for file in os.listdir(os.path.expanduser(json_credential_dir)):
+                if file.endswith('.json'):
+                    (json_credential_files
+                     .add(os.path.join(json_credential_dir, file)))
 
     # Add the credentials files configured via environment variables to the set
     # of files to to gather AWS secrets from.
