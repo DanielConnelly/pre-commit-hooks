@@ -80,6 +80,14 @@ def test_get_aws_secrets_from_env(env_vars, values):
                 'tempSessionToken',
             },
         ),
+        (
+            'aws_temp_credentials_secrets_file.json',
+            {
+                'tempAccessKeyId',
+                'tempSecretAccessKey',
+                'tempSessionToken',
+            },
+        ),
         ('nonsense.txt', set()),
         ('ok_json.json', set()),
     ),
@@ -141,6 +149,8 @@ def test_detect_aws_credentials(filename, expected_retval):
         get_resource_path(filename),
         '--credentials-file',
         'testing/resources/aws_config_with_multiple_sections.ini',
+        '--json-credentials-dir',
+        'testing/resources/',
     ))
     assert ret == expected_retval
 
@@ -167,6 +177,7 @@ def test_non_existent_credentials(mock_secrets_env, mock_secrets_file, capsys):
     ret = main((
         get_resource_path('aws_config_without_secrets.ini'),
         '--credentials-file=testing/resources/credentailsfilethatdoesntexist',
+        '--json-credentials-dir=directorythatdoesnotexist',
     ))
     assert ret == 2
     out, _ = capsys.readouterr()
@@ -187,6 +198,21 @@ def test_non_existent_credentials_with_allow_flag(
     ret = main((
         get_resource_path('aws_config_without_secrets.ini'),
         '--credentials-file=testing/resources/credentailsfilethatdoesntexist',
+        '--allow-missing-credentials',
+    ))
+    assert ret == 0
+
+
+@patch('pre_commit_hooks.detect_aws_credentials.get_aws_secrets_from_file')
+@patch('pre_commit_hooks.detect_aws_credentials.get_aws_secrets_from_env')
+def test_non_existent_json_credentials_with_allow_flag(
+        mock_secrets_env, mock_secrets_file,
+):
+    mock_secrets_env.return_value = set()
+    mock_secrets_file.return_value = set()
+    ret = main((
+        get_resource_path('aws_config_without_secrets.ini'),
+        '--json-credentials-file=credentailsfilethatdoesntexist',
         '--allow-missing-credentials',
     ))
     assert ret == 0
