@@ -63,6 +63,9 @@ def get_aws_secrets_from_json(json_credentials_file: str) -> set[str]:
     ):
         if var in data.get('Credentials', {}):
             keys.add(data['Credentials'][var])
+
+        if var in data.get('accessToken', {}):
+            keys.add(data['accessToken'][var])
     return keys
 
 
