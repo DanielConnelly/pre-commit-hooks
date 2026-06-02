@@ -68,19 +68,20 @@ def test_get_aws_secrets_from_env(env_vars, values):
     with patch.dict('os.environ', env_vars, clear=True):
         assert get_aws_secrets_from_env() == values
 
+
 @pytest.mark.parametrize(
     ('filename', 'expected_keys'),
     (
-            (
-                    'aws_temp_secrets_file.json',
-                    {
-                        "tempAccessKeyId",
-                        "tempSecretAccessKey",
-                        "tempSessionToken"
-                    },
-            ),
-            ('nonsense.txt', set()),
-            ('ok_json.json', set()),
+        (
+            'aws_temp_secrets_file.json',
+            {
+                'tempAccessKeyId',
+                'tempSecretAccessKey',
+                'tempSessionToken',
+            },
+        ),
+        ('nonsense.txt', set()),
+        ('ok_json.json', set()),
     ),
 )
 def test_get_aws_secrets_from_json_file(filename, expected_keys):

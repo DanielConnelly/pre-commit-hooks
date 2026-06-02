@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import argparse
 import configparser
+import json
 import os
 from collections.abc import Sequence
 from typing import NamedTuple
-import json
+
 
 class BadFile(NamedTuple):
     filename: str
     key: str
+
 
 def get_aws_cred_files_from_env() -> set[str]:
     """Extract credential file paths from environment variables."""
@@ -22,6 +24,7 @@ def get_aws_cred_files_from_env() -> set[str]:
         if env_var in os.environ
     }
 
+
 def get_aws_secrets_from_env() -> set[str]:
     """Extract AWS secrets from environment variables."""
     keys = set()
@@ -31,6 +34,7 @@ def get_aws_secrets_from_env() -> set[str]:
         if os.environ.get(env_var):
             keys.add(os.environ[env_var])
     return keys
+
 
 def get_aws_secrets_from_json_file(json_credentials_file: str) -> set[str]:
     """Extract AWS secrets from JSON configuration files.
@@ -42,7 +46,7 @@ def get_aws_secrets_from_json_file(json_credentials_file: str) -> set[str]:
     if not os.path.exists(aws_credentials_file_path):
         return set()
 
-    with open(aws_credentials_file_path, 'r') as f:
+    with open(aws_credentials_file_path) as f:
         try:
             data = json.load(f)
         except json.JSONDecodeError:
@@ -55,7 +59,7 @@ def get_aws_secrets_from_json_file(json_credentials_file: str) -> set[str]:
             'SessionToken',
             'aws_secret_access_key',
             'aws_security_token',
-            'aws_session_token'
+            'aws_session_token',
     ):
         if var in data.get('Credentials', {}):
             keys.add(data['Credentials'][var])
@@ -156,8 +160,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if os.path.isdir(os.path.expanduser(json_credential_dir)):
             for file in os.listdir(os.path.expanduser(json_credential_dir)):
                 if file.endswith('.json'):
-                    (json_credential_files
-                     .add(os.path.join(json_credential_dir, file)))
+                    (
+                        json_credential_files
+                        .add(os.path.join(json_credential_dir, file))
+                    )
 
     # Add the credentials files configured via environment variables to the set
     # of files to to gather AWS secrets from.
