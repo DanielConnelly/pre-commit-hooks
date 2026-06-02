@@ -44,7 +44,7 @@ def get_aws_secrets_from_json(json_credentials_file: str) -> set[str]:
     """
     aws_credentials_file_path = os.path.expanduser(json_credentials_file)
 
-    with open(aws_credentials_file_path) as f:
+    with open(aws_credentials_file_path, encoding='utf-8') as f:
         try:
             data = json.load(f)
         except json.JSONDecodeError:
