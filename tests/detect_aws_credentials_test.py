@@ -212,7 +212,7 @@ def test_non_existent_json_credentials_with_allow_flag(
     mock_secrets_file.return_value = set()
     ret = main((
         get_resource_path('aws_config_without_secrets.ini'),
-        '--json-credentials-file=credentailsfilethatdoesntexist',
+        '--json-credentials-dir=credentailsfilethatdoesntexist',
         '--allow-missing-credentials',
     ))
     assert ret == 0
