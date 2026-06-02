@@ -36,7 +36,7 @@ def get_aws_secrets_from_env() -> set[str]:
     return keys
 
 
-def get_aws_secrets_from_json_file(json_credentials_file: str) -> set[str]:
+def get_aws_secrets_from_json(json_credentials_file: str) -> set[str]:
     """Extract AWS secrets from JSON configuration files.
 
     Read a JSON-style configuration file and return a set with all found AWS
@@ -141,7 +141,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         action='append',
         default=['~/.aws/cli/cache/', '~/.aws/login/cache/'],
         help=(
-            'Location of additional AWS JSON credential file from which to get '
+            'Location of AWS JSON credential files from which to get '
             'secret keys. Can be passed multiple times.'
         ),
     )
@@ -174,7 +174,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         keys |= get_aws_secrets_from_file(credential_file)
 
     for json_credential_file in json_credential_files:
-        keys |= get_aws_secrets_from_json_file(json_credential_file)
+        keys |= get_aws_secrets_from_json(json_credential_file)
     # Secrets might be part of environment variables, so add such secrets to
     # the set of keys.
     keys |= get_aws_secrets_from_env()

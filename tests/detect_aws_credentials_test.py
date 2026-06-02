@@ -7,7 +7,7 @@ import pytest
 from pre_commit_hooks.detect_aws_credentials import get_aws_cred_files_from_env
 from pre_commit_hooks.detect_aws_credentials import get_aws_secrets_from_env
 from pre_commit_hooks.detect_aws_credentials import get_aws_secrets_from_file
-from pre_commit_hooks.detect_aws_credentials import get_aws_secrets_from_json_file
+from pre_commit_hooks.detect_aws_credentials import get_aws_secrets_from_json
 from pre_commit_hooks.detect_aws_credentials import main
 from testing.util import get_resource_path
 
@@ -84,9 +84,9 @@ def test_get_aws_secrets_from_env(env_vars, values):
         ('ok_json.json', set()),
     ),
 )
-def test_get_aws_secrets_from_json_file(filename, expected_keys):
+def test_get_aws_secrets_from_json(filename, expected_keys):
     """Test that reading secrets from files works."""
-    keys = get_aws_secrets_from_json_file(get_resource_path(filename))
+    keys = get_aws_secrets_from_json(get_resource_path(filename))
     assert keys == expected_keys
 
 
