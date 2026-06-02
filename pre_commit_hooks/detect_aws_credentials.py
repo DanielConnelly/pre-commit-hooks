@@ -5,12 +5,11 @@ import configparser
 import os
 from collections.abc import Sequence
 from typing import NamedTuple
-
+import json
 
 class BadFile(NamedTuple):
     filename: str
     key: str
-
 
 def get_aws_cred_files_from_env() -> set[str]:
     """Extract credential file paths from environment variables."""
@@ -23,15 +22,36 @@ def get_aws_cred_files_from_env() -> set[str]:
         if env_var in os.environ
     }
 
-
 def get_aws_secrets_from_env() -> set[str]:
     """Extract AWS secrets from environment variables."""
     keys = set()
     for env_var in (
-        'AWS_SECRET_ACCESS_KEY', 'AWS_SECURITY_TOKEN', 'AWS_SESSION_TOKEN',
+            'AWS_SECRET_ACCESS_KEY', 'AWS_SECURITY_TOKEN', 'AWS_SESSION_TOKEN',
     ):
         if os.environ.get(env_var):
             keys.add(os.environ[env_var])
+    return keys
+
+def get_aws_secrets_from_json_file(json_credentials_file: str) -> set[str]:
+    """Extract AWS secrets from JSON configuration files.
+
+    Read a JSON-style configuration file and return a set with all found AWS
+    secret access keys.
+    """
+    aws_credentials_file_path = os.path.expanduser(json_credentials_file)
+    if not os.path.exists(aws_credentials_file_path):
+        return set()
+
+    with open(aws_credentials_file_path, 'r') as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            return set()
+
+    keys = set()
+    for var in ('AccessKeyId', 'SecretAccessKey', 'SessionToken', 'aws_secret_access_key', 'aws_security_token', 'aws_session_token'):
+        if var in data.get('Credentials', {}):
+            keys.add(data['Credentials'][var])
     return keys
 
 
@@ -54,8 +74,8 @@ def get_aws_secrets_from_file(credentials_file: str) -> set[str]:
     keys = set()
     for section in parser.sections():
         for var in (
-            'aws_secret_access_key', 'aws_security_token',
-            'aws_session_token',
+                'aws_secret_access_key', 'aws_security_token',
+                'aws_session_token',
         ):
             try:
                 key = parser.get(section, var).strip()
@@ -105,6 +125,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
+        '--json-credentials-file',
+        dest='json_credential_file_locations',
+        action='append',
+        default=['~/.aws/cli/cache/', '~/.aws/login/cache/'],
+        help=(
+            'Location of additional AWS JSON credential file from which to get '
+            'secret keys. Can be passed multiple times.'
+        ),
+    )
+    parser.add_argument(
         '--allow-missing-credentials',
         dest='allow_missing_credentials',
         action='store_true',
@@ -113,6 +143,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     credential_files = set(args.credentials_file)
+    json_credential_file_locations = set(args.json_credential_file_locations)
+    json_credential_files = set()
+    for json_credential_file_location in json_credential_file_locations:
+        if os.path.isdir(os.path.expanduser(json_credential_file_location)):
+            for filename in os.listdir(os.path.expanduser(json_credential_file_location)):
+                if filename.endswith('.json'):
+                    json_credential_files.add(os.path.join(json_credential_file_location, filename))
 
     # Add the credentials files configured via environment variables to the set
     # of files to to gather AWS secrets from.
@@ -122,6 +159,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     for credential_file in credential_files:
         keys |= get_aws_secrets_from_file(credential_file)
 
+    for json_credential_file in json_credential_files:
+        keys |= get_aws_secrets_from_json_file(json_credential_file)
     # Secrets might be part of environment variables, so add such secrets to
     # the set of keys.
     keys |= get_aws_secrets_from_env()

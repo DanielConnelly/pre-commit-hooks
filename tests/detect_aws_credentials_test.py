@@ -7,6 +7,7 @@ import pytest
 from pre_commit_hooks.detect_aws_credentials import get_aws_cred_files_from_env
 from pre_commit_hooks.detect_aws_credentials import get_aws_secrets_from_env
 from pre_commit_hooks.detect_aws_credentials import get_aws_secrets_from_file
+from pre_commit_hooks.detect_aws_credentials import get_aws_secrets_from_json_file
 from pre_commit_hooks.detect_aws_credentials import main
 from testing.util import get_resource_path
 
@@ -66,6 +67,22 @@ def test_get_aws_secrets_from_env(env_vars, values):
     """Test that reading secrets from environment variables works."""
     with patch.dict('os.environ', env_vars, clear=True):
         assert get_aws_secrets_from_env() == values
+
+@pytest.mark.parametrize(
+    ('filename', 'expected_keys'),
+    (
+            (
+                    'aws_temp_secrets_file.json',
+                    {"tempAccessKeyId", "tempSecretAccessKey", "tempSessionToken"},
+            ),
+            ('nonsense.txt', set()),
+            ('ok_json.json', set()),
+    ),
+)
+def test_get_aws_secrets_from_json_file(filename, expected_keys):
+    """Test that reading secrets from files works."""
+    keys = get_aws_secrets_from_json_file(get_resource_path(filename))
+    assert keys == expected_keys
 
 
 @pytest.mark.parametrize(
