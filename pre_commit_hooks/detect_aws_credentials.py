@@ -43,8 +43,6 @@ def get_aws_secrets_from_json(json_credentials_file: str) -> set[str]:
     secret access keys.
     """
     aws_credentials_file_path = os.path.expanduser(json_credentials_file)
-    if not os.path.exists(aws_credentials_file_path):
-        return set()
 
     with open(aws_credentials_file_path) as f:
         try:
