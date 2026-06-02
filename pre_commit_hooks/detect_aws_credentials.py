@@ -57,9 +57,9 @@ def get_aws_secrets_from_json(json_credentials_file: str) -> set[str]:
             'AccessKeyId',
             'SecretAccessKey',
             'SessionToken',
-            'aws_secret_access_key',
-            'aws_security_token',
-            'aws_session_token',
+            'accessKeyId',
+            'secretAccessKey',
+            'sessionToken',
     ):
         if var in data.get('Credentials', {}):
             keys.add(data['Credentials'][var])
